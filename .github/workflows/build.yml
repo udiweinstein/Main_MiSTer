@@ -1,11 +1,16 @@
 # Builds Main (bin/MiSTer) with the same toolchain as the official releases:
 # Arm GNU Toolchain 10.2-2020.11, arm-none-linux-gnueabihf.
-# The binary is the "MiSTer" artifact of each run (Actions tab).
+# The binary is the "MiSTer" artifact of each run (Actions tab), and is also
+# pushed alone to the branch build-<branch> (easy to fetch with git).
 name: Build MiSTer
 
 on:
   push:
+    branches-ignore: [ 'build-*' ]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -31,3 +36,16 @@ jobs:
         with:
           name: MiSTer
           path: bin/MiSTer
+
+      - name: Publish to build-${{ github.ref_name }}
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir "$RUNNER_TEMP/pub" && cd "$RUNNER_TEMP/pub"
+          git init -q
+          cp "$GITHUB_WORKSPACE/bin/MiSTer" .
+          md5sum MiSTer > MiSTer.md5
+          git add MiSTer MiSTer.md5
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com \
+              commit -qm "MiSTer built from $GITHUB_SHA ($GITHUB_REF_NAME)"
+          git push -qf "https://x-access-token:$TOKEN@github.com/$GITHUB_REPOSITORY" HEAD:refs/heads/build-$GITHUB_REF_NAME
