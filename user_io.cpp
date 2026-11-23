@@ -15,6 +15,7 @@
 #include "hardware.h"
 #include "osd.h"
 #include "user_io.h"
+#include "support/a2/iigs_disks.h"
 #include "debug.h"
 #include "spi.h"
 #include "cfg.h"
@@ -2950,6 +2951,14 @@ void user_io_poll()
 	}
 
 	user_io_send_buttons(0);
+
+	// Apple IIgs core: disk image API for its Disks desk accessory and YANC
+	// (support/a2/iigs_disks.cpp)
+	{
+		static int iigs = -1;
+		if (iigs < 0) iigs = !strcasecmp(user_io_get_core_name(), "Apple-IIgs");
+		if (iigs) iigs_disks_poll();
+	}
 
 	if (is_minimig())
 	{

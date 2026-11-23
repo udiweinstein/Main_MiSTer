@@ -1,0 +1,33 @@
+# Builds Main (bin/MiSTer) with the same toolchain as the official releases:
+# Arm GNU Toolchain 10.2-2020.11, arm-none-linux-gnueabihf.
+# The binary is the "MiSTer" artifact of each run (Actions tab).
+name: Build MiSTer
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain (Arm gcc 10.2-2020.11)
+        run: |
+          cd "$RUNNER_TEMP"
+          wget -q https://developer.arm.com/-/media/Files/downloads/gnu-a/10.2-2020.11/binrel/gcc-arm-10.2-2020.11-x86_64-arm-none-linux-gnueabihf.tar.xz
+          tar xf gcc-arm-10.2-2020.11-x86_64-arm-none-linux-gnueabihf.tar.xz
+          echo "$RUNNER_TEMP/gcc-arm-10.2-2020.11-x86_64-arm-none-linux-gnueabihf/bin" >> "$GITHUB_PATH"
+
+      - name: Build
+        run: |
+          arm-none-linux-gnueabihf-gcc --version | head -1
+          make
+          ls -l bin/MiSTer
+          md5sum bin/MiSTer
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MiSTer
+          path: bin/MiSTer
