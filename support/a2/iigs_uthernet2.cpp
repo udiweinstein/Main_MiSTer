@@ -24,6 +24,7 @@
 #include "../../shmem.h"
 #include "iigs_uthernet2.h"
 #include "iigs_uthernet2_model.h"
+#include "iigs_disks.h"
 
 // host network layer, from the A2065 module
 extern int  ethernet_open(const char *iface, int promiscuous);
@@ -157,6 +158,13 @@ static void open_link(int mode, const uint8_t *mac)
 	       iface, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
+// Everything the IIgs core needs from Main's poll loop
+static void iigs_poll(void)
+{
+	iigs_uthernet2_poll();
+	iigs_disks_poll();
+}
+
 char is_iigs()
 {
 	static int type = 0;
@@ -164,7 +172,7 @@ char is_iigs()
 	{
 		const char *core = user_io_get_core_name();
 		type = (core && !strcasecmp(core, "Apple-IIgs")) ? 1 : 2;
-		if (type == 1) core_poll = iigs_uthernet2_poll;
+		if (type == 1) core_poll = iigs_poll;
 	}
 	return type == 1;
 }
